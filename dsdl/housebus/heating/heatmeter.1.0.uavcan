@@ -1,0 +1,9 @@
+int16 power
+int16 flow_rate
+int8 flow_temp
+int8 return_temp
+int16 delta_temp
+uint32 absolute_energy
+uint8 error_code
+
+@extent 20 * 8

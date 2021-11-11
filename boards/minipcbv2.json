@@ -1,0 +1,47 @@
+{
+    "build": {
+      "core": "stm32",
+      "cpu": "cortex-m0",
+      "extra_flags": "-DSTM32F072xB",
+      "f_cpu": "48000000L",
+      "mcu": "stm32f072c8t6",
+      "ldscript": "$PROJECT_DIR/ld/application_on_bootloader.ld",
+      "variant": "STM32F0xx/F072C8(T-U)_F072CB(T-U-Y)",
+      "framework_extra_flags": {
+        "arduino": "-DARDUINO_GENERIC_F072C8TX"
+      },
+      "arduino": {
+        "variant_h": "variant_generic.h"
+      },
+      "product_line": "STM32F072xB"
+    },
+    "debug": {
+      "jlink_device": "STM32F072C8",
+      "openocd_target": "stm32f0x",
+      "svd_path": "STM32F072x.svd"
+    },
+    "frameworks": [
+      "arduino",
+      "cmsis",
+      "libopencm3",
+      "stm32cube"
+    ],
+    "name": "Hausbus Minipcb v2 F072C8 (64 kB)",
+    "upload": {
+      "maximum_ram_size": 16384,
+      "maximum_size": 65536,
+      "offset_address": 16384,
+      "protocol": "dfu",
+      "protocols": [
+        "blackmagic",
+        "cmsis-dap",
+        "dfu",
+        "jlink",
+        "serial",
+        "stlink"
+      ]
+    },
+    "vendor": "NerdyProjects",
+    "url": "https://github.com/NerdyProjects"
+  }
+  
