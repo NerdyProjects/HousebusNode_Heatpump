@@ -1,9 +1,9 @@
-int16 power
-int16 flow_rate
-int8 flow_temp
-int8 return_temp
-int16 delta_temp
-uint32 absolute_energy
+int16 power_w
+int16 flow_rate_lph
+int8 flow_temp_k
+int8 return_temp_k
+int24 delta_temp_mk
+uint32 absolute_energy_kwh
 uint8 error_code
 
-@extent 20 * 8
+@extent 32 * 8

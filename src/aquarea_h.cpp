@@ -9,6 +9,15 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     send_lock = 0;
     lastCommandSend = 0;
     lastOptPCBquery = _getMillis(); /* delay the optional PCB query a bit after turn on */
+    lastCompressorState = 0;
+    lastStatusResult = 0;
+    checksum = 0;
+    commandWriteState = 0;
+    lastDemandControlCommand = 0;
+    lastSGCommand = 0;
+    inhibition_control = false;
+    initDone = false;
+    
 }
 
 void AquareaH::init_optional_pcb_settings(struct optional_query *optionalQuery) {
@@ -58,8 +67,24 @@ uint8_t AquareaH::process(uint8_t c) {
             send_lock = 0;
             /* checksum correct */    
             if (rxBufPos == 203) {
+                bool compressorState;
+                uint32_t timestamp = _getMillis();
                 decode_heatpump_data(rxBuf, &config, &status);
-                lastStatusResult = _getMillis();
+                compressorState = status.compressor_frequency > 0;
+                lastStatusResult = timestamp;
+                if (!initDone) {
+                    lastCompressorState = compressorState;
+                    initDone = true;
+                }
+                if (lastCompressorState && !compressorState) {
+                    compressorTurnedOffAt = timestamp;
+                    inhibition_control_temperature_trigger = 
+                        status.flow_temp > status.flow_target_temp;
+                }
+                if (!lastCompressorState && compressorState) {
+                    compressorTurnedOnAt = timestamp;
+                }
+                lastCompressorState = compressorState;
                 res = 1;
             } else if (rxBufPos == 20) {
                 decode_optional_heatpump_data(rxBuf);
@@ -97,6 +122,14 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
     if(!acquire_send_lock()) {
         return;
     }
+    uint8_t effective_sg_mode = query->sg_mode;
+    uint8_t effective_demand_control = query->demand_control;
+    if (inhibition_control && inhibition_control_inhibit) {
+        effective_sg_mode = AQUAREA_SG_OFF;
+    }
+    if (inhibition_control && inhibition_control_low_power) {
+        effective_demand_control = 43;
+    }
     lastOptPCBquery = _getMillis();
     write(0xF1);
     write(0x11);
@@ -104,7 +137,7 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
     write(0x50);
     write(0x00);
     write(0x00);
-    write((query->heat_cool << 7) | (query->compressor_enable << 6) | (query->sg_mode << 4) | (query->thermostat_1 << 2) | (query->thermostat_2));
+    write((query->heat_cool << 7) | (query->compressor_enable << 6) | (effective_sg_mode << 4) | (query->thermostat_1 << 2) | (query->thermostat_2));
     write(query->pool_temp);
     write(query->buffer_temp);
     write(0xE5);
@@ -112,7 +145,7 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
     write(query->z2_room_temp);
     write(0);
     write(query->solar_temp);
-    write(query->demand_control);
+    write(effective_demand_control);
     write(query->z2_water_temp);
     write(query->z1_water_temp);
     write(0);
@@ -159,26 +192,87 @@ void AquareaH::set_demand_control(uint8_t v) {
     lastDemandControlCommand = _getMillis();
 }
 
+void AquareaH::set_sg(uint8_t v) {
+    if (v <= AQUAREA_SG_SG2) {
+        optSettings.sg_mode = v;
+    }
+    lastSGCommand = _getMillis();    
+}
+
+void AquareaH::enable_inhibition_control() {
+    inhibition_control = true;
+}
+
+void AquareaH::disable_inhibition_control() {
+    inhibition_control = false;
+}
+
+#define INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF 60000
+#define INHIBITION_CONTROL_INHIBIT_FOR 3600000
+#define INHIBITION_CONTROL_LIMIT_POWER_FOR 3600000
+
 void AquareaH::tick() {
     uint32_t timestamp = _getMillis();
+    if (initDone) {
+        if (inhibition_control) {
+            /* Try to have the heatpump stay off longer when it should operate below
+            its lowest power output.
+            a) when it turns off due to too high power output, keep it off for a
+            certain time (1 hour?)
+            b) when it turns back on, limit the power using demand control to the
+            minimum for a certain time (1 hour?)
+            */
 
-    if (timestamp > lastDemandControlCommand + AQUAREA_DEMAND_CONTROL_TIMEOUT) {
+           /* turn off (implemented via SG ready) when off for a minute and flow temp
+            in the moment of turn off was too high */
+           if (!inhibition_control_inhibit && !lastCompressorState && inhibition_control_temperature_trigger &&
+           timestamp - compressorTurnedOffAt > INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF &&
+           timestamp - compressorTurnedOffAt < INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF + 60000) {
+               inhibition_control_inhibit = true;
+               inhibition_control_inhibit_startAt = timestamp;
+           }
+
+          /* allow turning back on after time has elapsed */  
+           if (inhibition_control_inhibit &&
+           timestamp - inhibition_control_inhibit_startAt > INHIBITION_CONTROL_INHIBIT_FOR) {
+               inhibition_control_inhibit = false;
+               /* prevent immediate retriggering */
+               inhibition_control_temperature_trigger = false;
+           }
+
+           inhibition_control_low_power = lastCompressorState &&
+            timestamp - compressorTurnedOnAt < INHIBITION_CONTROL_LIMIT_POWER_FOR;
+        } else {
+            inhibition_control_inhibit = false;
+            inhibition_control_low_power = false;
+            inhibition_control_temperature_trigger = false;
+        }
+    }
+    
+    if (timestamp - lastDemandControlCommand > AQUAREA_DEMAND_CONTROL_TIMEOUT) {
         /* reset demand control to 100% */
         optSettings.demand_control = 0xEA;
     }
+
+    if (timestamp - lastSGCommand > AQUAREA_SG_TIMEOUT) {
+        /* reset SG control to normal when there was no signalling */
+        optSettings.sg_mode = AQUAREA_SG_NORMAL;
+    }
+
+    
     
     while (send_lock && commandWriteState && _availableForWrite()) {
         send_request_continue();
     }
-    if (send_lock && timestamp > lastCommandSend + AQUAREA_COMMAND_REPLY_TIMEOUT) {
+    if (send_lock && timestamp - lastCommandSend > AQUAREA_COMMAND_REPLY_TIMEOUT) {
         /* timeout for reply - continue... */
         send_lock = 0;
     }
-    if (optPcbEnabled && !send_lock && timestamp > lastOptPCBquery + AQUAREA_OPTIONAL_PCB_INTERVAL) {
+    if (optPcbEnabled && !send_lock && timestamp - lastOptPCBquery > AQUAREA_OPTIONAL_PCB_INTERVAL) {
         /* because we are using the send lock, the TX buffer should provide enough space for the whole opt. packet */
         send_optional_pcb_packet(&optSettings);
     }
-    if (!send_lock && timestamp > lastStatusResult + AQUAREA_STATUS_INTERVAL) {
+    if (!send_lock && timestamp - lastStatusResult > AQUAREA_STATUS_INTERVAL) {
         send_request();
     }
 }

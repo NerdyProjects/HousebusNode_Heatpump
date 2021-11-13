@@ -1,0 +1,7 @@
+uint64 total_energy_mwh
+int40 power_mw
+int40 power_l1_mw
+int40 power_l2_mw
+int40 power_l3_mw
+
+@extent 40*8

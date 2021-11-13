@@ -8,11 +8,11 @@
 // are named with an underscore at the end, like foo_bar_().
 //
 // Generator:     nunavut-1.5.1 (serialization was enabled)
-// Source file:   /home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heatmeter.1.0.uavcan
-// Generated at:  2021-11-11 23:03:55.881718 UTC
+// Source file:   /home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/electricity/meter.1.0.uavcan
+// Generated at:  2021-11-11 23:03:55.711818 UTC
 // Is deprecated: no
 // Fixed port-ID: None
-// Full name:     housebus.heating.heatmeter
+// Full name:     housebus.electricity.meter
 // Version:       1.0
 //
 // Platform
@@ -31,24 +31,24 @@
 //     enable_serialization_asserts:  True
 //     enable_override_variable_array_capacity:  False
 
-#ifndef HOUSEBUS_HEATING_HEATMETER_1_0_INCLUDED_
-#define HOUSEBUS_HEATING_HEATMETER_1_0_INCLUDED_
+#ifndef HOUSEBUS_ELECTRICITY_METER_1_0_INCLUDED_
+#define HOUSEBUS_ELECTRICITY_METER_1_0_INCLUDED_
 
 #include <nunavut/support/serialization.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
-              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heatmeter.1.0.uavcan is trying to use a serialization library that was compiled with "
+              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/electricity/meter.1.0.uavcan is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_OMIT_FLOAT_SERIALIZATION_SUPPORT == 0,
-              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heatmeter.1.0.uavcan is trying to use a serialization library that was compiled with "
+              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/electricity/meter.1.0.uavcan is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_SERIALIZATION_ASSERTS == 1,
-              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heatmeter.1.0.uavcan is trying to use a serialization library that was compiled with "
+              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/electricity/meter.1.0.uavcan is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_OVERRIDE_VARIABLE_ARRAY_CAPACITY == 0,
-              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heatmeter.1.0.uavcan is trying to use a serialization library that was compiled with "
+              "/home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/electricity/meter.1.0.uavcan is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 
 #ifdef __cplusplus
@@ -56,10 +56,10 @@ extern "C" {
 #endif
 
 /// This type does not have a fixed port-ID. See https://forum.uavcan.org/t/choosing-message-and-service-ids/889
-#define housebus_heating_heatmeter_1_0_HAS_FIXED_PORT_ID_ false
+#define housebus_electricity_meter_1_0_HAS_FIXED_PORT_ID_ false
 
-#define housebus_heating_heatmeter_1_0_FULL_NAME_             "housebus.heating.heatmeter"
-#define housebus_heating_heatmeter_1_0_FULL_NAME_AND_VERSION_ "housebus.heating.heatmeter.1.0"
+#define housebus_electricity_meter_1_0_FULL_NAME_             "housebus.electricity.meter"
+#define housebus_electricity_meter_1_0_FULL_NAME_AND_VERSION_ "housebus.electricity.meter.1.0"
 
 /// Extent is the minimum amount of memory required to hold any serialized representation of any compatible
 /// version of the data type; or, on other words, it is the the maximum possible size of received objects of this type.
@@ -68,34 +68,28 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define housebus_heating_heatmeter_1_0_EXTENT_BYTES_                    32UL
-#define housebus_heating_heatmeter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_ 14UL
-static_assert(housebus_heating_heatmeter_1_0_EXTENT_BYTES_ >= housebus_heating_heatmeter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_,
+#define housebus_electricity_meter_1_0_EXTENT_BYTES_                    40UL
+#define housebus_electricity_meter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_ 28UL
+static_assert(housebus_electricity_meter_1_0_EXTENT_BYTES_ >= housebus_electricity_meter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
 typedef struct
 {
-    /// saturated int16 power_w
-    int16_t power_w;
+    /// saturated uint64 total_energy_mwh
+    uint64_t _total_energy_mwh;
 
-    /// saturated int16 flow_rate_lph
-    int16_t flow_rate_lph;
+    /// saturated int40 power_mw
+    int64_t power_mw;
 
-    /// saturated int8 flow_temp_k
-    int8_t flow_temp_k;
+    /// saturated int40 power_l1_mw
+    int64_t power_l1_mw;
 
-    /// saturated int8 return_temp_k
-    int8_t return_temp_k;
+    /// saturated int40 power_l2_mw
+    int64_t power_l2_mw;
 
-    /// saturated int24 delta_temp_mk
-    int32_t delta_temp_mk;
-
-    /// saturated uint32 absolute_energy_kwh
-    uint32_t absolute_energy_kwh;
-
-    /// saturated uint8 error_code
-    uint8_t error_code;
-} housebus_heating_heatmeter_1_0;
+    /// saturated int40 power_l3_mw
+    int64_t power_l3_mw;
+} housebus_electricity_meter_1_0;
 
 /// Serialize an instance into the provided buffer.
 /// The lifetime of the resulting serialized representation is independent of the original instance.
@@ -105,7 +99,7 @@ typedef struct
 /// @param obj      The object to serialize.
 ///
 /// @param buffer   The destination buffer. There are no alignment requirements.
-///                 @see housebus_heating_heatmeter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_
+///                 @see housebus_electricity_meter_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_
 ///
 /// @param inout_buffer_size_bytes  When calling, this is a pointer to the size of the buffer in bytes.
 ///                                 Upon return this value will be updated with the size of the constructed serialized
@@ -113,8 +107,8 @@ typedef struct
 ///                                 layer. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t housebus_heating_heatmeter_1_0_serialize_(
-    const housebus_heating_heatmeter_1_0* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
+static inline int8_t housebus_electricity_meter_1_0_serialize_(
+    const housebus_electricity_meter_1_0* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
 {
     if ((obj == NULL) || (buffer == NULL) || (inout_buffer_size_bytes == NULL))
     {
@@ -122,7 +116,7 @@ static inline int8_t housebus_heating_heatmeter_1_0_serialize_(
     }
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 112UL)
+    if ((8U * (size_t) capacity_bytes) < 224UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -130,101 +124,113 @@ static inline int8_t housebus_heating_heatmeter_1_0_serialize_(
     // in the serialization buffer up to the next byte boundary. This is by design and is guaranteed to be safe.
     size_t offset_bits = 0U;
 
-    {   // saturated int16 power_w
+    {   // saturated uint64 total_energy_mwh
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
+        NUNAVUT_ASSERT((offset_bits + 64ULL) <= (capacity_bytes * 8U));
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err0_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, obj->power_w, 16U);
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->_total_energy_mwh, 64U);
         if (_err0_ < 0)
         {
             return _err0_;
         }
-        offset_bits += 16U;
+        offset_bits += 64U;
     }
 
-    {   // saturated int16 flow_rate_lph
+    {   // saturated int40 power_mw
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err1_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, obj->flow_rate_lph, 16U);
+        NUNAVUT_ASSERT((offset_bits + 40ULL) <= (capacity_bytes * 8U));
+        int64_t _sat0_ = obj->power_mw;
+        if (_sat0_ < -549755813888LL)
+        {
+            _sat0_ = -549755813888LL;
+        }
+        if (_sat0_ > 549755813887LL)
+        {
+            _sat0_ = 549755813887LL;
+        }
+        const int8_t _err1_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, _sat0_, 40U);
         if (_err1_ < 0)
         {
             return _err1_;
         }
-        offset_bits += 16U;
+        offset_bits += 40U;
     }
 
-    {   // saturated int8 flow_temp_k
+    {   // saturated int40 power_l1_mw
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->flow_temp_k);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
-    }
-
-    {   // saturated int8 return_temp_k
-        NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->return_temp_k);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
-    }
-
-    {   // saturated int24 delta_temp_mk
-        NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 24ULL) <= (capacity_bytes * 8U));
-        int32_t _sat0_ = obj->delta_temp_mk;
-        if (_sat0_ < -8388608L)
+        NUNAVUT_ASSERT((offset_bits + 40ULL) <= (capacity_bytes * 8U));
+        int64_t _sat1_ = obj->power_l1_mw;
+        if (_sat1_ < -549755813888LL)
         {
-            _sat0_ = -8388608L;
+            _sat1_ = -549755813888LL;
         }
-        if (_sat0_ > 8388607L)
+        if (_sat1_ > 549755813887LL)
         {
-            _sat0_ = 8388607L;
+            _sat1_ = 549755813887LL;
         }
-        const int8_t _err2_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, _sat0_, 24U);
+        const int8_t _err2_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, _sat1_, 40U);
         if (_err2_ < 0)
         {
             return _err2_;
         }
-        offset_bits += 24U;
+        offset_bits += 40U;
     }
 
-    {   // saturated uint32 absolute_energy_kwh
+    {   // saturated int40 power_l2_mw
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 32ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err3_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->absolute_energy_kwh, 32U);
+        NUNAVUT_ASSERT((offset_bits + 40ULL) <= (capacity_bytes * 8U));
+        int64_t _sat2_ = obj->power_l2_mw;
+        if (_sat2_ < -549755813888LL)
+        {
+            _sat2_ = -549755813888LL;
+        }
+        if (_sat2_ > 549755813887LL)
+        {
+            _sat2_ = 549755813887LL;
+        }
+        const int8_t _err3_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, _sat2_, 40U);
         if (_err3_ < 0)
         {
             return _err3_;
         }
-        offset_bits += 32U;
+        offset_bits += 40U;
     }
 
-    {   // saturated uint8 error_code
+    {   // saturated int40 power_l3_mw
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->error_code);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
+        NUNAVUT_ASSERT((offset_bits + 40ULL) <= (capacity_bytes * 8U));
+        int64_t _sat3_ = obj->power_l3_mw;
+        if (_sat3_ < -549755813888LL)
+        {
+            _sat3_ = -549755813888LL;
+        }
+        if (_sat3_ > 549755813887LL)
+        {
+            _sat3_ = 549755813887LL;
+        }
+        const int8_t _err4_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, _sat3_, 40U);
+        if (_err4_ < 0)
+        {
+            return _err4_;
+        }
+        offset_bits += 40U;
     }
 
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
         NUNAVUT_ASSERT(_pad0_ > 0);
-        const int8_t _err4_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err4_ < 0)
+        const int8_t _err5_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err5_ < 0)
         {
-            return _err4_;
+            return _err5_;
         }
         offset_bits += _pad0_;
         NUNAVUT_ASSERT(offset_bits % 8U == 0U);
     }
     // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
 
-    NUNAVUT_ASSERT(offset_bits == 112ULL);
+    NUNAVUT_ASSERT(offset_bits == 224ULL);
 
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
     *inout_buffer_size_bytes = (size_t) (offset_bits / 8U);
@@ -251,8 +257,8 @@ static inline int8_t housebus_heating_heatmeter_1_0_serialize_(
 ///                                 was activated. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t housebus_heating_heatmeter_1_0_deserialize_(
-    housebus_heating_heatmeter_1_0* const out_obj, const uint8_t* const buffer, size_t* const inout_buffer_size_bytes)
+static inline int8_t housebus_electricity_meter_1_0_deserialize_(
+    housebus_electricity_meter_1_0* const out_obj, const uint8_t* const buffer, size_t* const inout_buffer_size_bytes)
 {
     if ((out_obj == NULL) || (buffer == NULL) || (inout_buffer_size_bytes == NULL))
     {
@@ -263,47 +269,30 @@ static inline int8_t housebus_heating_heatmeter_1_0_deserialize_(
     const size_t capacity_bits = capacity_bytes * (size_t) 8U;
     size_t offset_bits = 0U;
 
-    // saturated int16 power_w
+    // saturated uint64 total_energy_mwh
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->power_w = nunavutGetI16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
+    out_obj->_total_energy_mwh = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
+    offset_bits += 64U;
 
-    // saturated int16 flow_rate_lph
+    // saturated int40 power_mw
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->flow_rate_lph = nunavutGetI16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
+    out_obj->power_mw = nunavutGetI64(&buffer[0], capacity_bytes, offset_bits, 40);
+    offset_bits += 40U;
 
-    // saturated int8 flow_temp_k
+    // saturated int40 power_l1_mw
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->flow_temp_k = nunavutGetI8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    out_obj->power_l1_mw = nunavutGetI64(&buffer[0], capacity_bytes, offset_bits, 40);
+    offset_bits += 40U;
 
-    // saturated int8 return_temp_k
+    // saturated int40 power_l2_mw
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->return_temp_k = nunavutGetI8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    out_obj->power_l2_mw = nunavutGetI64(&buffer[0], capacity_bytes, offset_bits, 40);
+    offset_bits += 40U;
 
-    // saturated int24 delta_temp_mk
+    // saturated int40 power_l3_mw
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->delta_temp_mk = nunavutGetI32(&buffer[0], capacity_bytes, offset_bits, 24);
-    offset_bits += 24U;
-
-    // saturated uint32 absolute_energy_kwh
-    NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    out_obj->absolute_energy_kwh = nunavutGetU32(&buffer[0], capacity_bytes, offset_bits, 32);
-    offset_bits += 32U;
-
-    // saturated uint8 error_code
-    NUNAVUT_ASSERT(offset_bits % 8U == 0U);
-    if ((offset_bits + 8U) <= capacity_bits)
-    {
-        out_obj->error_code = buffer[offset_bits / 8U] & 255U;
-    }
-    else
-    {
-        out_obj->error_code = 0U;
-    }
-    offset_bits += 8U;
+    out_obj->power_l3_mw = nunavutGetI64(&buffer[0], capacity_bytes, offset_bits, 40);
+    offset_bits += 40U;
 
     offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
@@ -317,13 +306,13 @@ static inline int8_t housebus_heating_heatmeter_1_0_deserialize_(
 /// This function intentionally leaves inactive elements uninitialized; for example, members of a variable-length
 /// array beyond its length are left uninitialized; aliased union memory that is not used by the first union field
 /// is left uninitialized, etc. If full zero-initialization is desired, just use memset(&obj, 0, sizeof(obj)).
-static inline void housebus_heating_heatmeter_1_0_initialize_(housebus_heating_heatmeter_1_0* const out_obj)
+static inline void housebus_electricity_meter_1_0_initialize_(housebus_electricity_meter_1_0* const out_obj)
 {
     if (out_obj != NULL)
     {
         size_t size_bytes = 0;
         const uint8_t buf = 0;
-        const int8_t err = housebus_heating_heatmeter_1_0_deserialize_(out_obj, &buf, &size_bytes);
+        const int8_t err = housebus_electricity_meter_1_0_deserialize_(out_obj, &buf, &size_bytes);
         NUNAVUT_ASSERT(err >= 0);
         (void) err;
     }
@@ -332,5 +321,5 @@ static inline void housebus_heating_heatmeter_1_0_initialize_(housebus_heating_h
 #ifdef __cplusplus
 }
 #endif
-#endif // HOUSEBUS_HEATING_HEATMETER_1_0_INCLUDED_
+#endif // HOUSEBUS_ELECTRICITY_METER_1_0_INCLUDED_
 

@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.5.1 (serialization was enabled)
 // Source file:   /home/user/Documents/PlatformIO/Projects/stm32 test/dsdl/housebus/heating/heating_status.1.0.uavcan
-// Generated at:  2021-11-10 16:37:42.882453 UTC
+// Generated at:  2021-11-11 23:03:55.866419 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     housebus.heating.heating_status
@@ -68,8 +68,8 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define housebus_heating_heating_status_1_0_EXTENT_BYTES_                    37UL
-#define housebus_heating_heating_status_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_ 37UL
+#define housebus_heating_heating_status_1_0_EXTENT_BYTES_                    45UL
+#define housebus_heating_heating_status_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_ 45UL
 static_assert(housebus_heating_heating_status_1_0_EXTENT_BYTES_ >= housebus_heating_heating_status_1_0_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
@@ -150,26 +150,26 @@ typedef struct
     /// saturated int8 low_pressure
     int8_t low_pressure;
 
-    /// saturated int8 compressor_current
-    int8_t compressor_current;
+    /// saturated float32 compressor_current
+    float compressor_current;
 
     /// saturated uint8 compressor_frequency
     uint8_t compressor_frequency;
 
-    /// saturated uint16 pump_flow
-    uint16_t pump_flow;
+    /// saturated float32 pump_flow
+    float pump_flow;
 
-    /// saturated uint8 pump_speed
-    uint8_t pump_speed;
+    /// saturated uint16 pump_speed
+    uint16_t pump_speed;
 
     /// saturated uint8 pump_duty
     uint8_t pump_duty;
 
-    /// saturated uint8 fan1_rpm
-    uint8_t fan1_rpm;
+    /// saturated uint16 fan1_rpm
+    uint16_t fan1_rpm;
 
-    /// saturated uint8 fan2_rpm
-    uint8_t fan2_rpm;
+    /// saturated uint16 fan2_rpm
+    uint16_t fan2_rpm;
 
     /// saturated uint16 compressor_starts
     uint16_t compressor_starts;
@@ -209,7 +209,7 @@ static inline int8_t housebus_heating_heating_status_1_0_serialize_(
     }
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 296UL)
+    if ((8U * (size_t) capacity_bytes) < 360UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -509,15 +509,16 @@ static inline int8_t housebus_heating_heating_status_1_0_serialize_(
         offset_bits += 8U;
     }
 
-    {   // saturated int8 compressor_current
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err24_ = nunavutSetIxx(&buffer[0], capacity_bytes, offset_bits, obj->compressor_current, 8U);
+    {   // saturated float32 compressor_current
+        NUNAVUT_ASSERT((offset_bits + 32ULL) <= (capacity_bytes * 8U));
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err24_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->compressor_current);
         if (_err24_ < 0)
         {
             return _err24_;
         }
-        offset_bits += 8U;
+        offset_bits += 32U;
     }
 
     {   // saturated uint8 compressor_frequency
@@ -531,26 +532,27 @@ static inline int8_t housebus_heating_heating_status_1_0_serialize_(
         offset_bits += 8U;
     }
 
-    {   // saturated uint16 pump_flow
-        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err26_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->pump_flow, 16U);
+    {   // saturated float32 pump_flow
+        NUNAVUT_ASSERT((offset_bits + 32ULL) <= (capacity_bytes * 8U));
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err26_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->pump_flow);
         if (_err26_ < 0)
         {
             return _err26_;
         }
-        offset_bits += 16U;
+        offset_bits += 32U;
     }
 
-    {   // saturated uint8 pump_speed
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
+    {   // saturated uint16 pump_speed
+        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err27_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->pump_speed, 8U);
+        const int8_t _err27_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->pump_speed, 16U);
         if (_err27_ < 0)
         {
             return _err27_;
         }
-        offset_bits += 8U;
+        offset_bits += 16U;
     }
 
     {   // saturated uint8 pump_duty
@@ -564,26 +566,26 @@ static inline int8_t housebus_heating_heating_status_1_0_serialize_(
         offset_bits += 8U;
     }
 
-    {   // saturated uint8 fan1_rpm
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
+    {   // saturated uint16 fan1_rpm
+        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err29_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->fan1_rpm, 8U);
+        const int8_t _err29_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->fan1_rpm, 16U);
         if (_err29_ < 0)
         {
             return _err29_;
         }
-        offset_bits += 8U;
+        offset_bits += 16U;
     }
 
-    {   // saturated uint8 fan2_rpm
-        NUNAVUT_ASSERT((offset_bits + 8ULL) <= (capacity_bytes * 8U));
+    {   // saturated uint16 fan2_rpm
+        NUNAVUT_ASSERT((offset_bits + 16ULL) <= (capacity_bytes * 8U));
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err30_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->fan2_rpm, 8U);
+        const int8_t _err30_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->fan2_rpm, 16U);
         if (_err30_ < 0)
         {
             return _err30_;
         }
-        offset_bits += 8U;
+        offset_bits += 16U;
     }
 
     {   // saturated uint16 compressor_starts
@@ -644,7 +646,7 @@ static inline int8_t housebus_heating_heating_status_1_0_serialize_(
     }
     // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
 
-    NUNAVUT_ASSERT(offset_bits == 296ULL);
+    NUNAVUT_ASSERT(offset_bits == 360ULL);
 
     NUNAVUT_ASSERT(offset_bits % 8U == 0U);
     *inout_buffer_size_bytes = (size_t) (offset_bits / 8U);
@@ -791,33 +793,33 @@ static inline int8_t housebus_heating_heating_status_1_0_deserialize_(
     out_obj->low_pressure = nunavutGetI8(&buffer[0], capacity_bytes, offset_bits, 8);
     offset_bits += 8U;
 
-    // saturated int8 compressor_current
-    out_obj->compressor_current = nunavutGetI8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    // saturated float32 compressor_current
+    out_obj->compressor_current = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
 
     // saturated uint8 compressor_frequency
     out_obj->compressor_frequency = nunavutGetU8(&buffer[0], capacity_bytes, offset_bits, 8);
     offset_bits += 8U;
 
-    // saturated uint16 pump_flow
-    out_obj->pump_flow = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
+    // saturated float32 pump_flow
+    out_obj->pump_flow = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
 
-    // saturated uint8 pump_speed
-    out_obj->pump_speed = nunavutGetU8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    // saturated uint16 pump_speed
+    out_obj->pump_speed = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
     // saturated uint8 pump_duty
     out_obj->pump_duty = nunavutGetU8(&buffer[0], capacity_bytes, offset_bits, 8);
     offset_bits += 8U;
 
-    // saturated uint8 fan1_rpm
-    out_obj->fan1_rpm = nunavutGetU8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    // saturated uint16 fan1_rpm
+    out_obj->fan1_rpm = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
-    // saturated uint8 fan2_rpm
-    out_obj->fan2_rpm = nunavutGetU8(&buffer[0], capacity_bytes, offset_bits, 8);
-    offset_bits += 8U;
+    // saturated uint16 fan2_rpm
+    out_obj->fan2_rpm = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
     // saturated uint16 compressor_starts
     out_obj->compressor_starts = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);

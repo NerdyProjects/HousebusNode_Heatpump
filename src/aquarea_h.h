@@ -7,6 +7,12 @@
 #define AQUAREA_OPT_QUERY_SIZE 20
 #define AQUAREA_STATUS_INTERVAL 10000
 #define AQUAREA_DEMAND_CONTROL_TIMEOUT 7200000
+#define AQUAREA_SG_TIMEOUT 7200000
+
+#define AQUAREA_SG_NORMAL 0
+#define AQUAREA_SG_OFF 2
+#define AQUAREA_SG_SG1 1
+#define AQUAREA_SG_SG2 3
 
 struct hp_config {
     unsigned hp_state: 1;
@@ -47,7 +53,7 @@ struct hp_status {
     int8_t defrost_temp;
     int8_t eva_outlet_temp;
     int8_t bypass_outlet_temp;
-    int8_t ipm_temp;    /* what is this? */
+    int8_t ipm_temp;    /* what is this? -> transistor temperatures */
     int8_t high_pressure; /* divide by 5 to get value in Kgf/cm² */
     int8_t low_pressure; /* Kgf/cm² */
     int8_t compressor_current; /* divide by 5 to get actual current in A */
@@ -91,6 +97,9 @@ class AquareaH {
         struct hp_config config;
         struct hp_status status;
         void set_demand_control(uint8_t v);
+        void set_sg(uint8_t v);
+        void enable_inhibition_control();
+        void disable_inhibition_control();
 
     private:
         uint8_t rxBufPos;
@@ -108,6 +117,17 @@ class AquareaH {
         uint8_t checksum;
         uint8_t commandWriteState;
         uint32_t lastDemandControlCommand;
+        uint32_t lastSGCommand;
+        bool inhibition_control;
+        bool lastCompressorState;
+        /* gets true as soon as the first heatpump answer package has been received */
+        bool initDone;
+        uint32_t compressorTurnedOffAt;
+        uint32_t compressorTurnedOnAt;
+        bool inhibition_control_temperature_trigger;
+        bool inhibition_control_inhibit;
+        uint32_t inhibition_control_inhibit_startAt;
+        bool inhibition_control_low_power;
 
         
         void init_optional_pcb_settings(struct optional_query *optionalQuery);

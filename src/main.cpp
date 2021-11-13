@@ -7,14 +7,16 @@
 #include <bootloader_interface.h>
 #include <wrappers/housebus/heating/heatmeter_1_0.hpp>
 #include <wrappers/housebus/heating/heating_status_1_0.hpp>
-#include <wrappers/housebus/electricity/obis_reading_1_0.hpp>
+#include <wrappers/housebus/electricity/meter_1_0.hpp>
+#include <qfplib.h>
 
 #define CMD_SG_OFF 1
 #define CMD_SG_NORMAL 2
 #define CMD_SG_1 3
 #define CMD_SG_2 4
 #define CMD_SET_DEMAND_CONTROL 5
-#define CMD_SET_AUTO_DEMAND_CONTROL 6
+#define CMD_ENABLE_INHIBITION_CONTROL 6
+#define CMD_DISABLE_INHIBITION_CONTROL 7
 
 #define UAVCAN_NODE_ID 31
 
@@ -49,9 +51,9 @@ static size_t hm_write(uint8_t c) {
 
 ArduinoUAVCAN uc(UAVCAN_NODE_ID, transmitCanFrame);
 Heartbeat_1_0<> hb;
-Heatmeter_1_0<1000> hm;
-Obis_reading_1_0<1010> em_hp;
-Heating_status_1_0<1001> heating_status;
+Heatmeter_1_0<1000> msg_heatmeter;
+Meter_1_0<1010> msg_meter_heatpump;
+Heating_status_1_0<1001> msg_heating_status;
 D0Reader meter_heatpump(hp_meter_result);
 AquareaH heatpump(0, millis, hp_availableForWrite, hp_write);
 Sensostar heat_meter(hm_write, millis);
@@ -126,9 +128,39 @@ void onExecuteCommand_1_1_Request_Received(CanardTransfer const & transfer, Ardu
     case uavcan_node_ExecuteCommand_Request_1_0_COMMAND_BEGIN_SOFTWARE_UPDATE:
       restartNode();
       break;
+    
+    case CMD_SG_OFF:
+      heatpump.set_sg(AQUAREA_SG_OFF);
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;
+
+    case CMD_SG_NORMAL:
+      heatpump.set_sg(AQUAREA_SG_NORMAL);
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;
+
+    case CMD_SG_1:
+      heatpump.set_sg(AQUAREA_SG_SG1);
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;
+
+    case CMD_SG_2:
+      heatpump.set_sg(AQUAREA_SG_SG2);
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;    
 
     case CMD_SET_DEMAND_CONTROL:
       heatpump.set_demand_control(req.data.parameter.elements[0]);
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;
+    
+    case CMD_ENABLE_INHIBITION_CONTROL:
+      heatpump.enable_inhibition_control();
+      rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
+      break;
+    
+    case CMD_DISABLE_INHIBITION_CONTROL:
+      heatpump.disable_inhibition_control();
       rsp = ExecuteCommand_1_1::Response<>::Status::SUCCESS;
       break;
   }
@@ -137,12 +169,18 @@ void onExecuteCommand_1_1_Request_Received(CanardTransfer const & transfer, Ardu
 
 
 void hp_meter_result (uint8_t obis_1, uint8_t obis_2, uint8_t obis_3, uint64_t val) {
-  em_hp.data.code[0] = obis_1;
-  em_hp.data.code[1] = obis_2;
-  em_hp.data.code[3] = obis_3;
-  em_hp.data.value = val;
-  em_hp.data.unit = 0; /* todo */
-  uc.publish(em_hp);
+  if (obis_1 == 1 && obis_2 == 8 && obis_3 == 0) {
+    msg_meter_heatpump.data._total_energy_mwh = val / 10;
+  } else if (obis_1 == 1 && obis_2 == 7 && obis_3 == 0) {
+    msg_meter_heatpump.data.power_mw = val * 10;
+    uc.publish(msg_meter_heatpump);
+  } else if (obis_1 == 21 && obis_2 == 7 && obis_3 == 0) {
+    msg_meter_heatpump.data.power_l1_mw = val * 10;
+  } else if (obis_1 == 41 && obis_2 == 7 && obis_3 == 0) {
+    msg_meter_heatpump.data.power_l2_mw = val * 10;
+  } else if (obis_1 == 61 && obis_2 == 7 && obis_3 == 0) {
+    msg_meter_heatpump.data.power_l3_mw = val * 10;
+  }
 }
 
 static void copy_heatpump_status_data(housebus_heating_heating_status_1_0 *dst, struct hp_status *src) {
@@ -171,13 +209,13 @@ static void copy_heatpump_status_data(housebus_heating_heating_status_1_0 *dst, 
     dst->ipm_temp = src->ipm_temp;
     dst->high_pressure = src->high_pressure;
     dst->low_pressure = src->low_pressure;
-    dst->compressor_current = src->compressor_current;
+    dst->compressor_current = qfp_fdiv(qfp_int2float(src->compressor_current), 5.0f);
     dst->compressor_frequency = src->compressor_frequency;
-    dst->pump_flow = src->pump_flow;
-    dst->pump_speed = src->pump_speed;
+    dst->pump_flow = qfp_fix2float(src->pump_flow, 8);
+    dst->pump_speed = src->pump_speed * 50;
     dst->pump_duty = src->pump_duty;
-    dst->fan1_rpm = src->fan1_rpm;
-    dst->fan2_rpm = src->fan2_rpm;
+    dst->fan1_rpm = src->fan1_rpm * 10;
+    dst->fan2_rpm = src->fan2_rpm * 10;
     dst->compressor_starts = src->compressor_starts;
     dst->compressor_hours = src->compressor_hours;
     dst->heat_hours = src->heat_hours;
@@ -223,8 +261,8 @@ void loop() {
     char c = Serial1.read();
     if (heatpump.process(c)) {
       /* new data available */
-      copy_heatpump_status_data(&heating_status.data, &heatpump.status);
-      uc.publish(heating_status);
+      copy_heatpump_status_data(&msg_heating_status.data, &heatpump.status);
+      uc.publish(msg_heating_status);
     }
   }
 
@@ -234,14 +272,14 @@ void loop() {
     uint8_t res;
     res = heat_meter.process(c, &result);
     if (res) {
-      hm.data.absolute_energy = result.total_heat_energy;
-      hm.data.power = result.power;
-      hm.data.flow_temp = result.flow_temperature;
-      hm.data.return_temp = result.return_temperature;
-      hm.data.delta_temp = result.flow_return_difference_temperature;
-      hm.data.error_code = result.error;
-      hm.data.flow_rate = result.flow_speed;
-      uc.publish(hm);
+      msg_heatmeter.data.absolute_energy_kwh = result.total_heat_energy;
+      msg_heatmeter.data.power_w = result.power;
+      msg_heatmeter.data.flow_temp_k = result.flow_temperature;
+      msg_heatmeter.data.return_temp_k = result.return_temperature;
+      msg_heatmeter.data.delta_temp_mk = result.flow_return_difference_temperature * 10;
+      msg_heatmeter.data.error_code = result.error;
+      msg_heatmeter.data.flow_rate_lph = result.flow_speed;
+      uc.publish(msg_heatmeter);
     }
   }
 
