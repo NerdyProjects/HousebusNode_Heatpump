@@ -219,9 +219,9 @@ void AquareaH::disable_inhibition_control() {
     inhibition_control = false;
 }
 
-#define INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF 60000
-#define INHIBITION_CONTROL_INHIBIT_FOR 3600000
-#define INHIBITION_CONTROL_LIMIT_POWER_FOR 3600000
+#define INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF (90000)
+#define INHIBITION_CONTROL_INHIBIT_FOR (90 * 60 * 1000)
+#define INHIBITION_CONTROL_LIMIT_POWER_FOR (90 * 60 * 1000)
 
 void AquareaH::tick() {
     uint32_t timestamp = _getMillis();
