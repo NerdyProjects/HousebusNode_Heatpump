@@ -15,7 +15,7 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     commandWriteState = 0;
     lastDemandControlCommand = 0;
     lastSGCommand = 0;
-    inhibition_control = false;
+    inhibition_control = true;
     initDone = false;
     
 }
@@ -124,20 +124,32 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
     }
     uint8_t effective_sg_mode = query->sg_mode;
     uint8_t effective_demand_control = query->demand_control;
+    uint8_t effective_compressor_enable = query->compressor_enable;
+    uint32_t timestamp = _getMillis();
+    
     if (inhibition_control && inhibition_control_inhibit) {
-        effective_sg_mode = AQUAREA_SG_OFF;
+        effective_sg_mode = AQUAREA_SG_OFF;        
+        /* effective_compressor_enable = 0; */
     }
     if (inhibition_control && inhibition_control_low_power) {
+        uint32_t low_power_running_for = timestamp - compressorTurnedOnAt;
         effective_demand_control = 43;
+        if (low_power_running_for >  20 * 60000) {
+            /* slowly ramp up over about 90 minutes */
+            effective_demand_control += (low_power_running_for - 10 * 60000) / (2 * 60000);
+            if (effective_demand_control > 0xEA) {
+                effective_demand_control = 0xEA;
+            }
+        }        
     }
-    lastOptPCBquery = _getMillis();
+    lastOptPCBquery = timestamp;
     write(0xF1);
     write(0x11);
     write(0x01);
     write(0x50);
     write(0x00);
     write(0x00);
-    write((query->heat_cool << 7) | (query->compressor_enable << 6) | (effective_sg_mode << 4) | (query->thermostat_1 << 2) | (query->thermostat_2));
+    write((query->heat_cool << 7) | (effective_compressor_enable << 6) | (effective_sg_mode << 4) | (query->thermostat_1 << 2) | (query->thermostat_2));
     write(query->pool_temp);
     write(query->buffer_temp);
     write(0xE5);

@@ -55,7 +55,7 @@ Heatmeter_1_0<1000> msg_heatmeter;
 Meter_1_0<1010> msg_meter_heatpump;
 Heating_status_1_0<1001> msg_heating_status;
 D0Reader meter_heatpump(hp_meter_result);
-AquareaH heatpump(0, millis, hp_availableForWrite, hp_write);
+AquareaH heatpump(1, millis, hp_availableForWrite, hp_write);
 Sensostar heat_meter(hm_write, millis);
 
 uint8_t counter = 0;
