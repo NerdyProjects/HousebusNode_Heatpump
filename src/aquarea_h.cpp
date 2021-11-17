@@ -1,6 +1,7 @@
 #include <aquarea_h.h>
 
 AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, WriteBufferAvailableFunc availableForWrite, WriteByteFunc write) {
+    uint32_t timestamp = _getMillis();
     optPcbEnabled = optPcbEnable;
     init_optional_pcb_settings(&optSettings);
     _getMillis = getMillis;
@@ -8,7 +9,7 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     _write = write;
     send_lock = 0;
     lastCommandSend = 0;
-    lastOptPCBquery = _getMillis(); /* delay the optional PCB query a bit after turn on */
+    lastOptPCBquery = timestamp; /* delay the optional PCB query a bit after turn on */
     lastCompressorState = 0;
     lastStatusResult = 0;
     checksum = 0;
@@ -16,7 +17,12 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     lastDemandControlCommand = 0;
     lastSGCommand = 0;
     inhibition_control = true;
+    inhibition_control_inhibit = false;
+    inhibition_control_low_power = false;
+    inhibition_control_temperature_trigger = false;
     initDone = false;
+    compressorTurnedOnAt = timestamp - (120 * 60000);
+    compressorTurnedOffAt = timestamp - (120 * 60000);
     
 }
 
@@ -123,7 +129,7 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
         return;
     }
     uint8_t effective_sg_mode = query->sg_mode;
-    uint8_t effective_demand_control = query->demand_control;
+    uint32_t effective_demand_control = query->demand_control;
     uint8_t effective_compressor_enable = query->compressor_enable;
     uint32_t timestamp = _getMillis();
     
@@ -136,7 +142,7 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
         effective_demand_control = 43;
         if (low_power_running_for >  20 * 60000) {
             /* slowly ramp up over about 90 minutes */
-            effective_demand_control += (low_power_running_for - 10 * 60000) / (2 * 60000);
+            effective_demand_control += ((low_power_running_for) / (60000)) * 2;
             if (effective_demand_control > 0xEA) {
                 effective_demand_control = 0xEA;
             }
