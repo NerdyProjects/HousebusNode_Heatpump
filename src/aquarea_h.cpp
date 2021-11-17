@@ -1,7 +1,7 @@
 #include <aquarea_h.h>
 
 AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, WriteBufferAvailableFunc availableForWrite, WriteByteFunc write) {
-    uint32_t timestamp = _getMillis();
+    uint32_t timestamp = getMillis();
     optPcbEnabled = optPcbEnable;
     init_optional_pcb_settings(&optSettings);
     _getMillis = getMillis;
