@@ -80,6 +80,15 @@ struct optional_query {
     uint8_t z1_room_temp;
     uint8_t z2_room_temp;
     uint8_t solar_temp;
+    /* T-Cap 12 kW experience:
+    There is also a weird hystersis active, likely as described in the datasheet so
+    going upwards/downwards has different effects (of +/- 4 Hz):
+    90 is 38 Hz
+    100 is about 42 Hz (while minimum is 48 slowly modulating down to 37 over an hour)
+    110 is 52 Hz
+    120 is 56 Hz
+    130 is 60 Hz
+    */
     uint8_t demand_control;     /* 43: 5% up to 234: 100% */
     uint8_t z1_water_temp;
     uint8_t z2_water_temp;

@@ -141,8 +141,10 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
         uint32_t low_power_running_for = timestamp - compressorTurnedOnAt;
         effective_demand_control = 43;
         if (low_power_running_for >  20 * 60000) {
-            /* slowly ramp up over about 90 minutes */
-            effective_demand_control += ((low_power_running_for) / (60000)) * 2;
+            /* slowly ramp up over about 90 minutes:
+            From experience, the effective range of demand control is 90-130 about
+            0 degrees outside. */
+            effective_demand_control = 70 + ((low_power_running_for) / (60000)) ;
             if (effective_demand_control > 0xEA) {
                 effective_demand_control = 0xEA;
             }
