@@ -54,9 +54,9 @@ struct hp_status {
     int8_t eva_outlet_temp;
     int8_t bypass_outlet_temp;
     int8_t ipm_temp;    /* what is this? -> transistor temperatures */
-    int8_t high_pressure; /* divide by 5 to get value in Kgf/cm² */
-    int8_t low_pressure; /* Kgf/cm² */
-    int8_t compressor_current; /* divide by 5 to get actual current in A */
+    uint8_t high_pressure; /* divide by 5 to get value in Kgf/cm² */
+    uint8_t low_pressure; /* Kgf/cm² */
+    uint8_t compressor_current; /* divide by 5 to get actual current in A */
     uint8_t compressor_frequency;
     uint16_t pump_flow; /* pump flow in l/min as 8.8 fixed point */
     uint8_t pump_speed; /* pump speed in rpm, multiply by 50 to get RPM */
@@ -85,9 +85,22 @@ struct optional_query {
     going upwards/downwards has different effects (of +/- 4 Hz):
     90 is 38 Hz
     100 is about 42 Hz (while minimum is 48 slowly modulating down to 37 over an hour)
-    110 is 52 Hz
+    110, 115 is 54 Hz
     120 is 56 Hz
     130 is 60 Hz
+
+    (A1/W40):
+    High -> 115: 53/54 Hz
+    115 -> 110: 48/49/50 Hz (2.85 kW)
+    ... stable in single downward steps between
+    102 -> 101:  47/48 Hz (2.45 kW)
+    
+    90 -> 77: 42 Hz (2.0 kW)
+    91 -> 90: 40 Hz (2.1 kW)
+    90 -> 100 46 Hz (2.45 kW)
+    100 -> 110 50 Hz (2.85 kW)
+    112 -> 120 53 Hz (3.25 kW)
+    130 (3.57 kW)
     */
     uint8_t demand_control;     /* 43: 5% up to 234: 100% */
     uint8_t z1_water_temp;
@@ -109,8 +122,13 @@ class AquareaH {
         void set_sg(uint8_t v);
         void enable_inhibition_control();
         void disable_inhibition_control();
+        void enable_power_control();
+        void disable_power_control();
+        void enable_temperature_defrost_control();
+        void disable_temperature_defrost_control();
 
     private:
+        enum Command { REQUEST, REQUEST_DEFROST};
         uint8_t rxBufPos;
         /* buffer to store a whole RX packet to be able to check CRC before processing */
         uint8_t rxBuf[AQUAREA_RX_BUF_SIZE];
@@ -125,6 +143,7 @@ class AquareaH {
         WriteByteFunc _write;
         uint8_t checksum;
         uint8_t commandWriteState;
+        enum Command activeCommand;
         uint32_t lastDemandControlCommand;
         uint32_t lastSGCommand;
         bool inhibition_control;
@@ -137,6 +156,13 @@ class AquareaH {
         bool inhibition_control_inhibit;
         uint32_t inhibition_control_inhibit_startAt;
         bool inhibition_control_low_power;
+        bool power_control;
+        bool temperature_defrost_control;
+        uint8_t temperature_defrost_condition_fulfilled_count;
+        static int8_t power_control_temperatures[10];
+        static uint8_t power_control_demand[10];
+        uint8_t lastFlowTargetTemperature;
+        uint32_t last_defrost_active_at;
 
         
         void init_optional_pcb_settings(struct optional_query *optionalQuery);
@@ -153,4 +179,5 @@ class AquareaH {
         uint8_t acquire_send_lock();
         void send_request();
         void send_request_continue();
+        void send_defrost_request();
 };

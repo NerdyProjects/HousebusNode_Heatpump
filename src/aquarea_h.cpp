@@ -17,14 +17,19 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     lastDemandControlCommand = 0;
     lastSGCommand = 0;
     inhibition_control = true;
+    power_control = true;
     inhibition_control_inhibit = false;
     inhibition_control_low_power = false;
     inhibition_control_temperature_trigger = false;
     initDone = false;
+    temperature_defrost_condition_fulfilled_count = 0;
+    temperature_defrost_control = true;
     compressorTurnedOnAt = timestamp - (120 * 60000);
     compressorTurnedOffAt = timestamp - (120 * 60000);
-    
 }
+/* flow target temp for demand 77, 90, 100, 110, 120, 130, 141, 234 */
+uint8_t AquareaH::power_control_demand[10] = {77, 90, 100, 110, 120, 130, 140, 150, 160, 234};
+int8_t AquareaH::power_control_temperatures[10] =  {31, 32, 33,  34,  35,  36,  38,  39, 40, 41};
 
 void AquareaH::init_optional_pcb_settings(struct optional_query *optionalQuery) {
     optionalQuery->heat_cool = 0;
@@ -82,14 +87,24 @@ uint8_t AquareaH::process(uint8_t c) {
                     lastCompressorState = compressorState;
                     initDone = true;
                 }
-                if (lastCompressorState && !compressorState) {
+                if (lastCompressorState && !compressorState && !status.defrost) {
                     compressorTurnedOffAt = timestamp;
                     inhibition_control_temperature_trigger = 
-                        status.flow_temp > status.flow_target_temp;
+                        status.flow_temp > status.flow_target_temp &&
+                        status.defrost == 0;
                 }
                 if (!lastCompressorState && compressorState) {
                     compressorTurnedOnAt = timestamp;
                 }
+                if (status.defrost) {
+                    last_defrost_active_at = timestamp;
+                }
+                if (status.outdoor_pipe_temp < status.outdoor_temp - 8) {
+                    temperature_defrost_condition_fulfilled_count ++;
+                } else {
+                    temperature_defrost_condition_fulfilled_count = 0;
+                }
+                lastFlowTargetTemperature = status.flow_target_temp;
                 lastCompressorState = compressorState;
                 res = 1;
             } else if (rxBufPos == 20) {
@@ -137,18 +152,21 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
         effective_sg_mode = AQUAREA_SG_OFF;        
         /* effective_compressor_enable = 0; */
     }
-    if (inhibition_control && inhibition_control_low_power) {
-        uint32_t low_power_running_for = timestamp - compressorTurnedOnAt;
-        effective_demand_control = 43;
-        if (low_power_running_for >  20 * 60000) {
-            /* slowly ramp up over about 90 minutes:
-            From experience, the effective range of demand control is 90-130 about
-            0 degrees outside. */
-            effective_demand_control = 70 + ((low_power_running_for) / (60000)) ;
-            if (effective_demand_control > 0xEA) {
-                effective_demand_control = 0xEA;
+    if (initDone && power_control && (timestamp - lastStatusResult) < 30000) {
+        int i;
+        uint8_t power_control_result = 0;
+        for (i = 0; i < 10; ++i) {
+            if (lastFlowTargetTemperature <= power_control_temperatures[i]) {
+                power_control_result = power_control_demand[i];
+                break;
             }
-        }        
+        }
+        if (power_control_result < effective_demand_control) {
+            effective_demand_control = power_control_result;
+        }
+    }
+    if (inhibition_control && inhibition_control_low_power) {
+        effective_demand_control = 43;
     }
     lastOptPCBquery = timestamp;
     write(0xF1);
@@ -176,7 +194,11 @@ void AquareaH::send_optional_pcb_packet(const struct optional_query *query) {
 void AquareaH::send_request_continue() {
     switch (commandWriteState) {
         case 0:
-        write(0x71);
+        if (activeCommand == REQUEST) {
+            write(0x71);
+        } else {
+            write(0xF1);
+        }        
         break;
         case 1:
         write(0x6c);
@@ -186,6 +208,13 @@ void AquareaH::send_request_continue() {
         break;
         case 3:
         write(0x10);
+        break;
+        case 8:
+        if (activeCommand == REQUEST_DEFROST) {
+            write(0x02);
+        } else {
+            write(0x00);
+        }
         break;
         case 110:
         write_checksum();
@@ -199,10 +228,20 @@ void AquareaH::send_request_continue() {
     ++commandWriteState;
 }
 
+void AquareaH::send_defrost_request() {
+    if (!acquire_send_lock()) {
+        return;
+    }
+    activeCommand = REQUEST_DEFROST;
+    commandWriteState = 0;
+    send_request_continue();
+}
+
 void AquareaH::send_request() {
     if (!acquire_send_lock()) {
         return;
     }
+    activeCommand = REQUEST;
     commandWriteState = 0;
     send_request_continue();
 }
@@ -229,7 +268,11 @@ void AquareaH::disable_inhibition_control() {
 
 #define INHIBITION_CONTROL_TRIGGER_COMPRESSOR_MIN_OFF (90000)
 #define INHIBITION_CONTROL_INHIBIT_FOR (90 * 60 * 1000)
-#define INHIBITION_CONTROL_LIMIT_POWER_FOR (90 * 60 * 1000)
+#define INHIBITION_CONTROL_LIMIT_POWER_FOR (60 * 60 * 1000)
+/* Do not send a defrost command when last defrost state is less than this ago to allow minimum heating time.
+Default of heatpump is something around 30 minutes here which is too long, but I guess it's reasonable to keep
+a certain minimum */
+#define MIN_DEFROST_HEATING_INTERVAL (17 * 60 * 1000)
 
 void AquareaH::tick() {
     uint32_t timestamp = _getMillis();
@@ -261,7 +304,8 @@ void AquareaH::tick() {
            }
 
            inhibition_control_low_power = lastCompressorState &&
-            timestamp - compressorTurnedOnAt < INHIBITION_CONTROL_LIMIT_POWER_FOR;
+           lastFlowTargetTemperature < power_control_temperatures[1] &&
+            (timestamp - compressorTurnedOnAt < INHIBITION_CONTROL_LIMIT_POWER_FOR);
         } else {
             inhibition_control_inhibit = false;
             inhibition_control_low_power = false;
@@ -288,6 +332,14 @@ void AquareaH::tick() {
         /* timeout for reply - continue... */
         send_lock = 0;
     }
+    if (temperature_defrost_control &&
+    !send_lock &&
+    timestamp - last_defrost_active_at > MIN_DEFROST_HEATING_INTERVAL &&
+    temperature_defrost_condition_fulfilled_count > 3) {
+        temperature_defrost_condition_fulfilled_count = 0;
+        send_defrost_request();
+    }    
+    
     if (optPcbEnabled && !send_lock && timestamp - lastOptPCBquery > AQUAREA_OPTIONAL_PCB_INTERVAL) {
         /* because we are using the send lock, the TX buffer should provide enough space for the whole opt. packet */
         send_optional_pcb_packet(&optSettings);
