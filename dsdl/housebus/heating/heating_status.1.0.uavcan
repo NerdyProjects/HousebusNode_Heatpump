@@ -21,8 +21,8 @@ int8 defrost_temp
 int8 eva_outlet_temp
 int8 bypass_outlet_temp
 int8 ipm_temp
-int8 high_pressure
-int8 low_pressure
+uint8 high_pressure
+uint8 low_pressure
 float32 compressor_current
 uint8 compressor_frequency
 float32 pump_flow
