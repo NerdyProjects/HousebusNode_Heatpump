@@ -101,6 +101,7 @@ struct optional_query {
     100 -> 110 50 Hz (2.85 kW)
     112 -> 120 53 Hz (3.25 kW)
     130 (3.57 kW)
+    140 (4 kW)
     */
     uint8_t demand_control;     /* 43: 5% up to 234: 100% */
     uint8_t z1_water_temp;

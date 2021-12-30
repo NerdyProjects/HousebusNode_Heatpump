@@ -26,6 +26,7 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     temperature_defrost_control = true;
     compressorTurnedOnAt = timestamp - (120 * 60000);
     compressorTurnedOffAt = timestamp - (120 * 60000);
+    last_defrost_active_at = timestamp;
 }
 /* flow target temp for demand 77, 90, 100, 110, 120, 130, 141, 234 */
 uint8_t AquareaH::power_control_demand[10] = {77, 90, 100, 110, 120, 130, 140, 150, 160, 234};
@@ -99,7 +100,7 @@ uint8_t AquareaH::process(uint8_t c) {
                 if (status.defrost) {
                     last_defrost_active_at = timestamp;
                 }
-                if (status.outdoor_pipe_temp < status.outdoor_temp - 8) {
+                if (status.outdoor_pipe_temp < status.outdoor_temp - 8 && status.outdoor_temp < 6) {
                     temperature_defrost_condition_fulfilled_count ++;
                 } else {
                     temperature_defrost_condition_fulfilled_count = 0;
@@ -335,6 +336,8 @@ void AquareaH::tick() {
     if (temperature_defrost_control &&
     !send_lock &&
     timestamp - last_defrost_active_at > MIN_DEFROST_HEATING_INTERVAL &&
+    timestamp - compressorTurnedOnAt > MIN_DEFROST_HEATING_INTERVAL &&
+    lastCompressorState &&
     temperature_defrost_condition_fulfilled_count > 3) {
         temperature_defrost_condition_fulfilled_count = 0;
         send_defrost_request();
