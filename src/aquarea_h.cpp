@@ -30,7 +30,8 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
 }
 /* flow target temp for demand 77, 90, 100, 110, 120, 130, 141, 234 */
 uint8_t AquareaH::power_control_demand[10] = {77, 90, 100, 110, 120, 130, 140, 150, 160, 234};
-int8_t AquareaH::power_control_temperatures[10] =  {31, 32, 33,  34,  35,  36,  38,  39, 40, 41};
+int8_t AquareaH::power_control_temperatures[10] =  {33, 34, 35,  36,  37,  39,  40,  41, 42, 43};
+#define AQUAREAH_MAX_FLOW_TARGET_FOR_INHIBITION 31
 
 void AquareaH::init_optional_pcb_settings(struct optional_query *optionalQuery) {
     optionalQuery->heat_cool = 0;
@@ -92,6 +93,7 @@ uint8_t AquareaH::process(uint8_t c) {
                     compressorTurnedOffAt = timestamp;
                     inhibition_control_temperature_trigger = 
                         status.flow_temp > status.flow_target_temp &&
+                        status.flow_target_temp <= AQUAREAH_MAX_FLOW_TARGET_FOR_INHIBITION &&
                         status.defrost == 0;
                 }
                 if (!lastCompressorState && compressorState) {
