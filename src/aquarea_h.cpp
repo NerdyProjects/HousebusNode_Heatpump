@@ -11,6 +11,7 @@ AquareaH::AquareaH(uint8_t optPcbEnable, TimestampMillisecondsFunc getMillis, Wr
     lastCommandSend = 0;
     lastOptPCBquery = timestamp; /* delay the optional PCB query a bit after turn on */
     lastCompressorState = 0;
+    lastDHWState = 0;
     lastStatusResult = 0;
     checksum = 0;
     commandWriteState = 0;
@@ -81,15 +82,18 @@ uint8_t AquareaH::process(uint8_t c) {
             /* checksum correct */    
             if (rxBufPos == 203) {
                 bool compressorState;
+                bool dhwState;
                 uint32_t timestamp = _getMillis();
                 decode_heatpump_data(rxBuf, &config, &status);
                 compressorState = status.compressor_frequency > 0;
+                dhwState = status.valve_dhw > 0;
                 lastStatusResult = timestamp;
                 if (!initDone) {
                     lastCompressorState = compressorState;
+                    lastDHWState = dhwState;
                     initDone = true;
                 }
-                if (lastCompressorState && !compressorState && !status.defrost) {
+                if (lastCompressorState && !compressorState && !status.defrost && !lastDHWState && !dhwState) {
                     compressorTurnedOffAt = timestamp;
                     inhibition_control_temperature_trigger = 
                         status.flow_temp > status.flow_target_temp &&
@@ -109,6 +113,7 @@ uint8_t AquareaH::process(uint8_t c) {
                 }
                 lastFlowTargetTemperature = status.flow_target_temp;
                 lastCompressorState = compressorState;
+                lastDHWState = dhwState;
                 res = 1;
             } else if (rxBufPos == 20) {
                 decode_optional_heatpump_data(rxBuf);

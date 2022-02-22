@@ -149,6 +149,7 @@ class AquareaH {
         uint32_t lastSGCommand;
         bool inhibition_control;
         bool lastCompressorState;
+        bool lastDHWState;
         /* gets true as soon as the first heatpump answer package has been received */
         bool initDone;
         uint32_t compressorTurnedOffAt;
